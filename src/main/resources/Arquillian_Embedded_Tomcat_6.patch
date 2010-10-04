@@ -1,0 +1,163 @@
+Index: containers/tomcat-embedded-6/src/main/java/org/jboss/arquillian/container/tomcat/embedded_6/TomcatContainer.java
+===================================================================
+--- containers/tomcat-embedded-6/src/main/java/org/jboss/arquillian/container/tomcat/embedded_6/TomcatContainer.java	(revision b46b8bc4c1711cf9c972b9a90fb28511a144e16b)
++++ containers/tomcat-embedded-6/src/main/java/org/jboss/arquillian/container/tomcat/embedded_6/TomcatContainer.java	(revision )
+@@ -40,6 +40,7 @@
+ import org.jboss.arquillian.spi.DeployableContainer;
+ import org.jboss.arquillian.spi.DeploymentException;
+ import org.jboss.arquillian.spi.LifecycleException;
++import org.jboss.modcluster.catalina.ModClusterListener;
+ import org.jboss.shrinkwrap.api.Archive;
+ import org.jboss.shrinkwrap.tomcat_6.api.ShrinkWrapStandardContext;
+ 
+@@ -264,7 +265,7 @@
+       tomcatHomeFile.mkdirs();
+       embedded.setCatalinaBase(tomcatHomeFile.getAbsolutePath());
+       embedded.setCatalinaHome(tomcatHomeFile.getAbsolutePath());
+-     
++
+       // creates the engine, i.e., <engine> element in server.xml
+       engine = embedded.createEngine();
+       engine.setName(serverName);
+@@ -288,13 +289,43 @@
+       Connector connector = embedded.createConnector(InetAddress.getByName(bindAddress), bindPort, false);
+       embedded.addConnector(connector);
+       connector.setContainer(engine);
+-      
++
++      embedded.addLifecycleListener(createModClusterListener("224.0.1.105", 23364, false, null, true, false, true, null));
++      
+       // starts embedded tomcat
+       embedded.init();
+       embedded.start();
+       wasStarted = true;
+    }
+ 
++   /* Create the listener
++    *    groupa: multi address to receive from httpd.
++    *    groupp: port to receive from httpd.
++    *    ssl: use ssl.
++    *    domain: domain to send to httpd (to fail over in the domain).
++    *    stickySession: use stickySession.
++    *    stickySessionRemove: remove the sessionid if we are sticky and need to failover.
++    *    stickySessionForce: return an error if we have to failover to another node.
++    *    advertiseSecurityKey: Key for the digest logic.
++    */
++   private ModClusterListener createModClusterListener(String groupa, int groupp, boolean ssl, String domain,
++                                                   boolean stickySession, boolean stickySessionRemove,
++                                                   boolean stickySessionForce, String advertiseSecurityKey) {
++      ModClusterListener listener = new ModClusterListener();
++      listener.setAdvertiseGroupAddress(groupa);
++      listener.setAdvertisePort(groupp);
++      listener.setSsl(ssl);
++      listener.setLoadBalancingGroup(domain);
++      listener.setStickySession(stickySession);
++      listener.setStickySessionRemove(stickySessionRemove);
++      listener.setStickySessionForce(stickySessionForce);
++      listener.setNodeTimeout(20000);
++      listener.setProxyList("localhost:6666");
++      if (advertiseSecurityKey != null)
++         listener.setAdvertiseSecurityKey(advertiseSecurityKey);
++      return listener;
++   }
++
+    protected void stopTomcatEmbedded() throws LifecycleException, org.apache.catalina.LifecycleException
+    {
+       embedded.stop();
+Index: containers/tomcat-embedded-6/src/main/java/org/jboss/arquillian/container/tomcat/embedded_6/TomcatConfiguration.java
+===================================================================
+--- containers/tomcat-embedded-6/src/main/java/org/jboss/arquillian/container/tomcat/embedded_6/TomcatConfiguration.java	(revision b46b8bc4c1711cf9c972b9a90fb28511a144e16b)
++++ containers/tomcat-embedded-6/src/main/java/org/jboss/arquillian/container/tomcat/embedded_6/TomcatConfiguration.java	(revision )
+@@ -18,6 +18,7 @@
+ 
+ import org.jboss.arquillian.spi.ContainerConfiguration;
+ import org.jboss.arquillian.spi.ContainerProfile;
++import org.jboss.util.StringPropertyReplacer;
+ 
+ /**
+  * Arquillian Tomcat Container Configuration
+@@ -54,6 +55,7 @@
+ 
+    public void setBindAddress(String bindAddress)
+    {
++      bindAddress = StringPropertyReplacer.replaceProperties(bindAddress);
+       this.bindAddress = bindAddress;
+    }
+ 
+@@ -65,7 +67,7 @@
+    /**
+     * Set the HTTP bind port.
+     *
+-    * @param httpBindPort
++    * @param bindHttpPort
+     *            HTTP bind port
+     */
+    public void setBindHttpPort(int bindHttpPort)
+@@ -84,7 +86,7 @@
+    }
+ 
+    /**
+-    * @param appBase the directory where the deployed webapps are stored within the Tomcat installation
++    * @param tomcatAppBase the directory where the deployed webapps are stored within the Tomcat installation
+     */
+    public void setAppBase(String tomcatAppBase)
+    {
+@@ -97,7 +99,7 @@
+    }
+ 
+    /**
+-    * @param workDir the directory where the compiled JSP files and session serialization data is stored
++    * @param tomcatWorkDir the directory where the compiled JSP files and session serialization data is stored
+     */
+    public void setWorkDir(String tomcatWorkDir)
+    {
+@@ -138,7 +140,7 @@
+     * Unpacking is required if you are using Weld to provide CDI support
+     * in a servlet environment.
+     *
+-    * @param a switch indicating whether the WAR should be unpacked
++    * @param unpack switch indicating whether the WAR should be unpacked
+     */
+    public void setUnpackArchive(boolean unpack)
+    {
+Index: containers/tomcat-embedded-6/pom.xml
+===================================================================
+--- containers/tomcat-embedded-6/pom.xml	(revision b46b8bc4c1711cf9c972b9a90fb28511a144e16b)
++++ containers/tomcat-embedded-6/pom.xml	(revision )
+@@ -18,6 +18,8 @@
+ 
+    <properties>
+       <version.org.apache.tomcat>6.0.29</version.org.apache.tomcat>
++      <version.jboss.common.core>2.2.14.GA</version.jboss.common.core>
++      <version.mod_cluster>1.1.0.Final</version.mod_cluster>
+    </properties>
+ 
+    <dependencies>
+@@ -92,7 +94,7 @@
+       <dependency>
+          <groupId>org.jboss.weld.servlet</groupId>
+          <artifactId>weld-servlet</artifactId>
+-         <version>1.0.1-Final</version>
++         <version>1.1.0.Beta1</version>
+          <scope>test</scope>
+       </dependency>
+ 
+@@ -110,6 +112,18 @@
+          <scope>test</scope>
+       </dependency>
+ 
++      <dependency>
++         <groupId>org.jboss</groupId>
++         <artifactId>jboss-common-core</artifactId>
++         <version>${version.jboss.common.core}</version>
++      </dependency>
++
++      <dependency>
++         <groupId>org.jboss.mod_cluster</groupId>
++         <artifactId>mod_cluster</artifactId>
++         <version>${version.mod_cluster}</version>
++      </dependency>
++
+    </dependencies>
+ 
+ </project>

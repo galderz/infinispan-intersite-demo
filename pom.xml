@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+   <modelVersion>4.0.0</modelVersion>
+
+   <groupId>acme.infinispan</groupId>
+   <artifactId>intersite-demo</artifactId>
+   <name>Infinispan inter-site demo application</name>
+   <description>TODO</description>
+   <version>0.0.1-SNAPSHOT</version>
+
+   <properties>
+      <version.arquillian>1.0.0.Alpha4</version.arquillian>
+      <version.arquillian.snapshot>1.0.0-SNAPSHOT</version.arquillian.snapshot>
+      <version.tomcat>6.0.29</version.tomcat>
+      <version.shrinkwrap>1.0.0-alpha-11</version.shrinkwrap>
+      <version.junit>4.8.1</version.junit>
+      <version.inject>1</version.inject>
+      <version.infinispan>4.2.0.Alpha2</version.infinispan>
+      <version.weld>1.1.0.Beta1</version.weld> <!-- 1.0.1-Final -->
+      <version.weld.extensions>1.0.0.Alpha2</version.weld.extensions>
+      <version.mod_cluster>1.1.0.Final</version.mod_cluster>
+      <version.jboss.logging>2.1.0.GA</version.jboss.logging>
+   </properties>
+
+   <dependencies>
+
+      <dependency>
+         <groupId>org.jboss.mod_cluster</groupId>
+         <artifactId>mod_cluster</artifactId>
+         <version>${version.mod_cluster}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging-spi</artifactId>
+        <version>${version.jboss.logging}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-core</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-cachestore-remote</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-server-hotrod</artifactId>
+         <version>${version.infinispan}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.infinispan</groupId>
+         <artifactId>infinispan-server-hotrod</artifactId>
+         <version>${version.infinispan}</version>
+         <type>test-jar</type>
+      </dependency>
+
+      <dependency>
+        <groupId>javax.inject</groupId>
+        <artifactId>javax.inject</artifactId>
+        <version>${version.inject}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.arquillian</groupId>
+         <artifactId>arquillian-spi</artifactId>
+         <version>${version.arquillian}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.shrinkwrap</groupId>
+         <artifactId>shrinkwrap-extension-tomcat-6</artifactId>
+         <version>${version.shrinkwrap}</version>
+      </dependency>
+
+      <!-- Not yet working w/o a hack -->
+      <dependency>
+         <groupId>org.jboss.arquillian.protocol</groupId>
+         <artifactId>arquillian-protocol-servlet-3</artifactId>
+         <version>${version.arquillian}</version>
+      </dependency>
+
+      <!-- TODO We likely need a servlet packager to restrict use of EAR -->
+
+      <dependency>
+         <groupId>org.jboss.arquillian.testenricher</groupId>
+         <artifactId>arquillian-testenricher-cdi</artifactId>
+         <version>${version.arquillian}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.arquillian.testenricher</groupId>
+         <artifactId>arquillian-testenricher-resource</artifactId>
+         <version>${version.arquillian}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.arquillian.container</groupId>
+         <artifactId>arquillian-tomcat-embedded-6</artifactId>
+         <version>${version.arquillian.snapshot}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.tomcat</groupId>
+         <artifactId>catalina</artifactId>
+         <version>${version.tomcat}</version>
+         <!--<scope>provided</scope>-->
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.tomcat</groupId>
+         <artifactId>coyote</artifactId>
+         <version>${version.tomcat}</version>
+         <!--<scope>provided</scope>-->
+      </dependency>
+
+      <dependency>
+         <groupId>org.apache.tomcat</groupId>
+         <artifactId>jasper</artifactId>
+         <version>${version.tomcat}</version>
+         <!--<scope>provided</scope>-->
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.arquillian</groupId>
+        <artifactId>arquillian-junit</artifactId>
+        <version>${version.arquillian}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <version>${version.junit}</version>
+      </dependency>
+
+      <!-- Weld servlet required for testing CDI injections -->
+      <dependency>
+         <groupId>org.jboss.weld.servlet</groupId>
+         <artifactId>weld-servlet</artifactId>
+         <version>${version.weld}</version>
+         <!--<scope>test</scope>-->
+      </dependency>
+
+      <dependency>
+         <groupId>org.jboss.weld</groupId>
+         <artifactId>weld-extensions</artifactId>
+         <version>${version.weld.extensions}</version>
+      </dependency>
+
+      <dependency>
+         <groupId>org.glassfish.web</groupId>
+         <artifactId>el-impl</artifactId>
+         <version>2.2</version>
+         <!--<scope>test</scope>-->
+      </dependency>
+
+      <dependency>
+         <groupId>javax.servlet.jsp</groupId>
+         <artifactId>jsp-api</artifactId>
+         <version>2.2</version>
+         <!--<scope>test</scope>-->
+      </dependency>
+
+   </dependencies>
+
+</project>
