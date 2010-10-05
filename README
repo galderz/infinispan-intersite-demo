@@ -1,0 +1,11 @@
+To run demo, execute:
+
+1. active-1 (ContainerTestCase) with: -Djava.net.preferIPv4Stack=true -Djgroups.bind_addr=127.0.0.2 -Dtomcat.bind.address=127.0.0.2
+2. active-2 (ContainerTestCase) with: -Djava.net.preferIPv4Stack=true -Djgroups.bind_addr=127.0.0.3 -Dtomcat.bind.address=127.0.0.3
+3. standby-1 (drumport.standby.StandbyContainerTestCase) with: -Djava.net.preferIPv4Stack=true -Djgroups.bind_addr=127.0.0.4 -Dtomcat.bind.address=127.0.0.4
+
+Finally, hit the servlets in these addresses:
+
+lo2:8888/test/Test
+lo3:8888/test/Test
+lo4:8888/test/Test
